@@ -1,0 +1,9 @@
+Package: com.phillipt.docker
+Name: Docker
+Depends: mobilesubstrate
+Version: 1.0
+Architecture: iphoneos-arm
+Description: a minimal dock extension tweak
+Maintainer: Phillip Tennen
+Author: Phillip Tennen
+Section: Tweaks
