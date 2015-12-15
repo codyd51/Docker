@@ -30,7 +30,10 @@
 @property (nonatomic, assign) BOOL highlighted;
 @property (nonatomic, assign) CGRect iconImageFrame;
 -(BOOL)isInDock;
+//iOS 8
 -(id)initWithDefaultSize;
+//iOS 9 
+-(id)initWithContentType:(int)type;
 -(void)_setIcon:(SBIcon*)icon animated:(BOOL)animated;
 @end
 @interface SBFolderIconView : SBIconView
@@ -135,7 +138,14 @@ SBIconView* iconViewForIcon(SBIcon* icon) {
 	return [iconMap mappedIconViewForIcon:icon];
 }
 SBIconView* newIconViewForIcon(SBIcon* icon) {
-	SBIconView* iconView = [[%c(SBIconView) alloc] initWithDefaultSize];
+	SBIconView* iconView = nil;
+	if ([iconView respondsToSelector:@selector(initWithDefaultSize)]) {
+		iconView = [[%c(SBIconView) alloc] initWithDefaultSize];
+	}
+	else {
+		iconView = [[%c(SBIconView) alloc] initWithContentType:0];
+	}
+
 	[iconView _setIcon:icon animated:YES];
 	iconView.delegate = [%c(SBIconController) sharedInstance];
 	return iconView;
