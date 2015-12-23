@@ -1,7 +1,7 @@
-Package: com.phillipt.docker
+Package: org.thebigboss.docker
 Name: Docker
 Depends: mobilesubstrate
-Version: 1.0
+Version: 2.1
 Architecture: iphoneos-arm
 Description: a minimal dock extension tweak
 Maintainer: Phillip Tennen

@@ -68,9 +68,10 @@
 @end
 @interface SBFolder : NSObject
 @end
-@interface SBIconController : NSObject
-+(id)sharedInstance;
+@interface SBIconController : UIViewController
++(instancetype)sharedInstance;
 @property (nonatomic, retain) SBIconModel* model;
+@property (nonatomic, retain) UIView* contentView;
 @property (nonatomic, assign) BOOL isEditing;
 -(SBIconListView*)currentRootIconList;
 -(SBDockListView*)dockListView;
@@ -105,6 +106,7 @@
 -(void)docker_collapseDock;
 -(void)docker_addPanGestureRecognizer;
 -(void)docker_removePanGestureRecognizer;
+-(void)docker__gestureEnd;
 @end
 @interface SBIconController (Docker)
 @property (nonatomic, assign, setter=docker_setIsSelectingApp:) BOOL docker_isSelectingApp;
@@ -242,6 +244,14 @@ SBIconView* newIconViewForIcon(SBIcon* icon) {
 
 		if (originalIconOriginY == 0) originalIconOriginY = [self docker_originalIconOriginY];
 		NSLog(@"originalIconOriginY: %f", originalIconOriginY);
+
+		SBIconController* iconController = [%c(SBIconController) sharedInstance];
+		//SBIconListView* listView =  [iconController iconListViewAtIndex:[iconController currentIconListIndex] inFolder:iconController.rootFolder createIfNecessary:NO];
+		UIView* contentView = iconController.contentView;
+
+		UITapGestureRecognizer* tapRec = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(docker_collapseDock)];
+		tapRec.cancelsTouchesInView = NO;
+		[contentView addGestureRecognizer:tapRec];
 	}
 	else if (panGesture.state == UIGestureRecognizerStateChanged) {
 		CGFloat adjustedTranslation = [panGesture translationInView:self].y;
@@ -281,31 +291,35 @@ SBIconView* newIconViewForIcon(SBIcon* icon) {
 		}
 	}
 	else {
-		//spring back to proper frame
-		if (self.frame.size.height > self.docker_expandedFrame.size.height) {
-			NSLog(@"Springing back to proper expanded frame");
+		[self docker__gestureEnd];
+	}
+}
+%new
+-(void)docker__gestureEnd {
+	//spring back to proper frame
+	if (self.frame.size.height > self.docker_expandedFrame.size.height) {
+		NSLog(@"Springing back to proper expanded frame");
 
-			[UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.45 initialSpringVelocity:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
-				self.frame = self.docker_expandedFrame;
-			} completion:nil];
+		[UIView animateWithDuration:0.5 delay:0.0 usingSpringWithDamping:0.45 initialSpringVelocity:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
+			self.frame = self.docker_expandedFrame;
+		} completion:nil];
+	}
+	else {
+		//decide whether to reclose or expand
+		//the original frame * 1.5 is half of the expanded height
+		if (self.frame.size.height > self.docker_originalFrame.size.height*1.5) {
+			[self docker_expandDock];
 		}
 		else {
-			//decide whether to reclose or expand
-			//the original frame * 1.5 is half of the expanded height
-			if (self.frame.size.height > self.docker_originalFrame.size.height*1.5) {
-				[self docker_expandDock];
-			}
-			else {
-				[self docker_collapseDock];
-			}
+			[self docker_collapseDock];
 		}
+	}
 
-		//set the extra icon views to their proper size
-		for (UIView* view in self.docker_extraIconViews) {
-			[UIView animateWithDuration:0.4 delay:0.0 usingSpringWithDamping:0.55 initialSpringVelocity:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
-				view.transform = CGAffineTransformIdentity;
-			} completion:nil];
-		}
+	//set the extra icon views to their proper size
+	for (UIView* view in self.docker_extraIconViews) {
+		[UIView animateWithDuration:0.4 delay:0.0 usingSpringWithDamping:0.55 initialSpringVelocity:0 options:UIViewAnimationOptionAllowUserInteraction animations:^{
+			view.transform = CGAffineTransformIdentity;
+		} completion:nil];
 	}
 }
 %new
